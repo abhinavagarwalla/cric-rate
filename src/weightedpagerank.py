@@ -114,17 +114,23 @@ def main():
     linkmatrix = [[] for i in xrange(10)]
 
     
-    teams_id = {"Australia":0,"Bangladesh":1,"England":2,"India":3,
-    "New Zealand":4,"Pakistan":5,"South Africa":6,"Sri Lanka":7,
-    "West Indies":8,
-    "Zimbabwe":9,
+    teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
+    "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
+    "West Indies":10,"Zimbabwe":11,
     }
-    xltrain = pd.ExcelFile("E:/kaggle/23yard/second-attempt/Train3.xlsx")
-    df_train = xltrain.parse("Sheet1")
+
+    linkmatrix = [[] for i in xrange(len(teams_id))]
+    df_train = pd.read_csv("../data/cricket.csv")
 
     for i in df_train.index:
-        loser_id = teams_id[df_train.Loser[i]]
+        if df_train.Team1[i] not in teams_id.keys():
+            continue
+        if df_train.Team2[i] not in teams_id.keys():
+            continue    
+        loser_id = teams_id[df_train.Team1[i]]
         winner_id = teams_id[df_train.Winner[i]]
+        if df_train.Team1[i] in df_train.Winner[i]:
+            loser_id = teams_id[df_train.Team2[i]]
         linkmatrix[loser_id].append(winner_id)
 
     #print linkmatrix
