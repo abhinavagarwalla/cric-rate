@@ -27,6 +27,9 @@ INITIAL = 1200
 #: Default Beta value.
 BETA = 200
 
+MARGIN_RUN = 0.2
+MARGIN_RUN_NORM = 50.
+MARGIN_WKTS = 0.2
 visual = True
 
 class Rating(object):
@@ -248,47 +251,24 @@ class Elo(object):
         return ('%s(k_factor=%s, rating_class=%s, '
                 'initial=%.3f, beta=%.3f)' % args)
 
+class ModElo(Elo):
+    def rate_1vs1(self, rating1, rating2, winnerby, margin, drawn=False):
+        scores = (DRAW, DRAW) if drawn else (WIN, LOSS)
+        return (self.rate(rating1, [(scores[0], rating2)], winnerby, margin),
+                self.rate(rating2, [(scores[1], rating1)], winnerby, margin))
 
-def rate(rating, series):
-    return global_env().rate(rating, series)
-
-
-def adjust(rating, series):
-    return global_env().adjust(rating, series)
-
-
-def expect(rating, other_rating):
-    return global_env().expect(rating, other_rating)
-
-
-def rate_1vs1(rating1, rating2, drawn=False):
-    return global_env().rate_1vs1(rating1, rating2, drawn)
-
-
-def adjust_1vs1(rating1, rating2, drawn=False):
-    return global_env().adjust_1vs1(rating1, rating2, drawn)
-
-
-def quality_1vs1(rating1, rating2):
-    return global_env().quality_1vs1(rating1, rating2)
-
-
-def setup(k_factor=K_FACTOR, rating_class=RATING_CLASS,
-          initial=INITIAL, beta=BETA, env=None):
-    if env is None:
-        env = Elo(k_factor, rating_class, initial, beta)
-    global_env.__elo__ = env
-    return env
-
-
-def global_env():
-    """Gets the global Elo environment."""
-    try:
-        global_env.__elo__
-    except AttributeError:
-        # setup the default environment
-        setup()
-    return global_env.__elo__
+    def rate(self, rating, series, winnerby, margin):
+        """Calculates new ratings by the game result series."""
+        rating = self.ensure_rating(rating)
+        k = self.k_factor(rating) if callable(self.k_factor) else self.k_factor
+        if winnerby=="runs":
+            k *= (1+MARGIN_RUN)**(margin/MARGIN_RUN_NORM)
+        if winnerby=="wickets":
+            k *= (1+MARGIN_WKTS)**(margin)
+        new_rating = float(rating) + k * self.adjust(rating, series)
+        if hasattr(rating, 'rated'):
+            new_rating = rating.rated(new_rating)
+        return new_rating
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -299,7 +279,7 @@ ratings_id = {"Afghanistan":1000, "Australia":1000,"Bangladesh":1000,"England":1
 "West Indies":1000,"Zimbabwe":1000,}
 
 def main():
-    env = Elo(initial=1000)
+    env = ModElo(initial=1000)
     ratings = []
     df_train = pd.read_csv("../data/cricket.csv")
     df_train.sort(columns="Date", inplace=True)
@@ -320,7 +300,8 @@ def main():
         if df_train.Team1[i] in df_train.Winner[i]:
             loser_id = df_train.Team2[i]
 
-        ratings_id[winner_id], ratings_id[loser_id] = rate_1vs1(winner_rate, loser_rate)
+        ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
+            df_train.Winnerby[i], df_train.Margin[i])
         # print loser_id, winner_id, rate_1vs1(winner_rate, loser_rate)
         # print ratings_id
         ratings.append(ratings_id.copy())
