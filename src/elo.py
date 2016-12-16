@@ -1,15 +1,11 @@
 from datetime import datetime
 import inspect
-import pandas as pd
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
 
 __version__  = '0.1.dev'
 __all__ = ['Elo', 'Rating', 'CountedRating', 'TimedRating', 'rate', 'adjust',
            'expect', 'rate_1vs1', 'adjust_1vs1', 'quality_1vs1', 'setup',
            'global_env', 'WIN', 'DRAW', 'LOSS', 'K_FACTOR', 'RATING_CLASS',
            'INITIAL', 'BETA']
-
 
 #: The actual score for win.
 WIN = 1.
@@ -30,7 +26,8 @@ BETA = 200
 MARGIN_RUN = 0.2
 MARGIN_RUN_NORM = 50.
 MARGIN_WKTS = 0.2
-visual = True
+K_FACTOR_RUN = 10
+K_FACTOR_WKTS = 10
 
 class Rating(object):
 
@@ -262,62 +259,10 @@ class ModElo(Elo):
         rating = self.ensure_rating(rating)
         k = self.k_factor(rating) if callable(self.k_factor) else self.k_factor
         if winnerby=="runs":
-            k *= (1+MARGIN_RUN)**(margin/MARGIN_RUN_NORM)
+            k = K_FACTOR_RUN*((1+MARGIN_RUN)**(margin/MARGIN_RUN_NORM))
         if winnerby=="wickets":
-            k *= (1+MARGIN_WKTS)**(margin)
+            k = K_FACTOR_WKTS*((1+MARGIN_WKTS)**(margin))
         new_rating = float(rating) + k * self.adjust(rating, series)
         if hasattr(rating, 'rated'):
             new_rating = rating.rated(new_rating)
         return new_rating
-
-teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
-"Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
-"West Indies":10,"Zimbabwe":11,}
-
-ratings_id = {"Afghanistan":1000, "Australia":1000,"Bangladesh":1000,"England":1000,"India":1000,
-"Ireland":1000, "New Zealand":1000,"Pakistan":1000,"South Africa":1000,"Sri Lanka":1000,
-"West Indies":1000,"Zimbabwe":1000,}
-
-def main():
-    env = ModElo(initial=1000)
-    ratings = []
-    df_train = pd.read_csv("../data/cricket.csv")
-    df_train.sort(columns="Date", inplace=True)
-
-    for i in df_train.index:
-        if df_train.Team1[i] not in teams_id.keys():
-            continue
-        if df_train.Team2[i] not in teams_id.keys():
-            continue    
-
-        loser_rate = ratings_id[df_train.Team1[i]]
-        winner_rate = ratings_id[df_train.Winner[i]]
-        if df_train.Team1[i] in df_train.Winner[i]:
-            loser_rate = ratings_id[df_train.Team2[i]]
-
-        loser_id = df_train.Team1[i]
-        winner_id = df_train.Winner[i]
-        if df_train.Team1[i] in df_train.Winner[i]:
-            loser_id = df_train.Team2[i]
-
-        ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
-            df_train.Winnerby[i], df_train.Margin[i])
-        # print loser_id, winner_id, rate_1vs1(winner_rate, loser_rate)
-        # print ratings_id
-        ratings.append(ratings_id.copy())
-    return ratings
-
-def visualize(ratings):
-    full_ratings = {"Afghanistan":1000, "Australia":1000,"Bangladesh":1000,"England":1000,"India":1000,
-    "Ireland":1000, "New Zealand":1000,"Pakistan":1000,"South Africa":1000,"Sri Lanka":1000,
-    "West Indies":1000,"Zimbabwe":1000,}
-    xr = range(len(ratings))
-    for i in full_ratings.keys():
-        full_ratings[i] = [j[i] for j in ratings]
-        lowess = sm.nonparametric.lowess(full_ratings[i], xr, frac=0.2)
-        plt.plot(lowess[:, 0], lowess[:, 1])
-    plt.show()
-
-ratings = main()
-if visual:
-    visualize(ratings)
