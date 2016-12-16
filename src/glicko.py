@@ -24,19 +24,9 @@ DRAW = 0.5
 LOSS = 0.
 
 
-MU = 1500
-PHI = 350
-SIGMA = 0.06
-TAU = 1.0
-EPSILON = 0.000001
-#: A constant which is used to standardize the logistic function to
-#: `1/(1+exp(-x))` from `1/(1+10^(-r/400))`
-Q = math.log(10) / 400
-
-
 class Rating(object):
 
-    def __init__(self, mu=MU, phi=PHI, sigma=SIGMA):
+    def __init__(self, mu=1500, phi=350, sigma=0.06):
         self.mu = mu
         self.phi = phi
         self.sigma = sigma
@@ -49,12 +39,13 @@ class Rating(object):
 
 class Glicko2(object):
 
-    def __init__(self, mu=MU, phi=PHI, sigma=SIGMA, tau=TAU, epsilon=EPSILON):
+    def __init__(self, mu=1500, phi=350, sigma=0.06, tau=1.0, epsilon=0.000001, Q = math.log(10)/400):
         self.mu = mu
         self.phi = phi
         self.sigma = sigma
         self.tau = tau
         self.epsilon = epsilon
+        self.Q = Q
 
     def create_rating(self, mu=None, phi=None, sigma=None):
         if mu is None:
@@ -146,11 +137,11 @@ class Glicko2(object):
             difference += impact * (actual_score - expected_score)
             d_square_inv += (
                 expected_score * (1 - expected_score) *
-                (Q ** 2) * (impact ** 2))
+                (self.Q ** 2) * (impact ** 2))
         difference /= variance_inv
         variance = 1. / variance_inv
         denom = rating.phi ** -2 + d_square_inv
-        mu = rating.mu + Q / denom * (difference / variance_inv)
+        mu = rating.mu + self.Q / denom * (difference / variance_inv)
         phi = math.sqrt(1 / denom)
         # Step 5. Determine the new value, Sigma', ot the sigma. This
         #         computation requires iteration.

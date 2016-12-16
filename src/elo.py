@@ -1,33 +1,12 @@
 from datetime import datetime
 import inspect
 
-__version__  = '0.1.dev'
-__all__ = ['Elo', 'Rating', 'CountedRating', 'TimedRating', 'rate', 'adjust',
-           'expect', 'rate_1vs1', 'adjust_1vs1', 'quality_1vs1', 'setup',
-           'global_env', 'WIN', 'DRAW', 'LOSS', 'K_FACTOR', 'RATING_CLASS',
-           'INITIAL', 'BETA']
-
 #: The actual score for win.
 WIN = 1.
 #: The actual score for draw.
 DRAW = 0.5
 #: The actual score for loss.
 LOSS = 0.
-
-#: Default K-factor.
-K_FACTOR = 10
-#: Default rating class.
-RATING_CLASS = float
-#: Default initial rating.
-INITIAL = 1200
-#: Default Beta value.
-BETA = 200
-
-MARGIN_RUN = 0.2
-MARGIN_RUN_NORM = 50.
-MARGIN_WKTS = 0.2
-K_FACTOR_RUN = 10
-K_FACTOR_WKTS = 10
 
 class Rating(object):
 
@@ -169,8 +148,8 @@ class TimedRating(Rating):
 
 class Elo(object):
 
-    def __init__(self, k_factor=K_FACTOR, rating_class=RATING_CLASS,
-                 initial=INITIAL, beta=BETA):
+    def __init__(self, k_factor=10, rating_class=float,
+                 initial=1200, beta=200):
         self.k_factor = k_factor
         self.rating_class = rating_class
         self.initial = initial
@@ -249,6 +228,20 @@ class Elo(object):
                 'initial=%.3f, beta=%.3f)' % args)
 
 class ModElo(Elo):
+    def __init__(self, k_factor=10, rating_class=float,
+                 initial=1200, beta=200, margin_run=0.2, 
+                 margin_run_norm=50., margin_wkts=0.2,
+                 k_factor_run=10, k_factor_wkts=10):
+        self.k_factor = k_factor
+        self.rating_class = rating_class
+        self.initial = initial
+        self.beta = beta
+        self.margin_run = margin_run
+        self.margin_run_norm = margin_run_norm
+        self.margin_wkts = margin_wkts
+        self.k_factor_run = k_factor_run
+        self.k_factor_wkts = k_factor_wkts
+
     def rate_1vs1(self, rating1, rating2, winnerby, margin, drawn=False):
         scores = (DRAW, DRAW) if drawn else (WIN, LOSS)
         return (self.rate(rating1, [(scores[0], rating2)], winnerby, margin),
@@ -259,9 +252,9 @@ class ModElo(Elo):
         rating = self.ensure_rating(rating)
         k = self.k_factor(rating) if callable(self.k_factor) else self.k_factor
         if winnerby=="runs":
-            k = K_FACTOR_RUN*((1+MARGIN_RUN)**(margin/MARGIN_RUN_NORM))
+            k = self.k_factor_run*((1+self.margin_run)**(1.*margin/self.margin_run_norm))
         if winnerby=="wickets":
-            k = K_FACTOR_WKTS*((1+MARGIN_WKTS)**(margin))
+            k = self.k_factor_wkts*((1+self.margin_wkts)**(margin))
         new_rating = float(rating) + k * self.adjust(rating, series)
         if hasattr(rating, 'rated'):
             new_rating = rating.rated(new_rating)
