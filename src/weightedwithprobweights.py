@@ -149,26 +149,13 @@ def main():
         played[winner_id][loser_id] += 1
         winmatrix[loser_id][winner_id] += 1
 
-    # print winmatrix
-
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Adjacency(winmatrix, mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    layout = g.layout("kk")
-    g.write_svg("graph.svg", labels = "name" , layout=layout)
-    # print g.ecount()
-
-    print g
     for i in range(len(teams_id)):
         for j in range(len(teams_id)):
             if played[i][j]!=0:
                 winmatrix[i][j] /= 1.*(played[i][j])
-    
-    pr = g.pagerank(vertices = None, directed = True, damping = 0.85)
-    print pr
-    exit()
      
     # print winmatrix
+    
     wnm = np.array(winmatrix)
     outs = np.sum(wnm, axis=1)
     pr =  pageRank(linkmatrix, alpha=0.85, convergence=0.001, checkSteps=10, probweights=winmatrix, outwardstrength=outs)
