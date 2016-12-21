@@ -29,19 +29,19 @@ for i in df_train.index:
 print winmatrix
 
 g = ig.Graph.Full(n = len(teams_id), directed = True)
-g = g.Adjacency(winmatrix, mode = "DIRECTED")
+g = g.Weighted_Adjacency(winmatrix, mode = "DIRECTED")
 g.vs["name"] = teams_id.keys()
 layout = g.layout("kk")
 # g.write_svg("graph.svg", labels = "name" , layout=layout)
 print g.ecount()
-
-print g
+# print g
 
 for i in range(len(teams_id)):
     for j in range(len(teams_id)):
         if played[i][j]!=0:
             winmatrix[i][j] /= 1.*(played[i][j])
 
-pr = g.pagerank(vertices = None, directed = True, damping = 0.85, weights = winmatrix)
+pr = g.personalized_pagerank(vertices = None, directed = True, damping = 0.85,
+    weights = winmatrix, implementation='power')
 print pr
 exit()

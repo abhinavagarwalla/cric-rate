@@ -35,9 +35,8 @@ layout = g.layout("kk")
 g.write_svg("graph.svg", labels = "name" , layout=layout)
 print g.ecount()
 
-print g
+# print g
 
 #Note can change pagerank methods to compare results
-pr = g.pagerank(vertices = None, directed = True, damping = 0.85)
+pr = g.pagerank(vertices = None, directed = True, damping = 0.85, implementation='power')
 print pr
-exit()
