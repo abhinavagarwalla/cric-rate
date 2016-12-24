@@ -6,6 +6,7 @@ import glicko as gl
 from trueskill import TrueSkill, Rating, quality_1vs1, rate_1vs1
 import math
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
+from sklearn.preprocessing import LabelEncoder
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -19,6 +20,10 @@ elo_params = {"k_factor":10, "rating_class":float, "initial":1200, "beta":200,
     "margin_run":0.2, "margin_run_norm":50., "margin_wkts":0.2,
     "k_factor_run":10, "k_factor_wkts":10}
 
+elo_params_k = {"rating_class":float, "initial":1200, "beta":200,
+    "kf_wt_rating":.1, "kf_wt_margin_runs":.1, "kf_wt_margin_wkts":.1,
+    "kf_wt_winnerby":.1,"kf_wt_tossdecision":.1,"kf_wt_tosswinner":.1}
+
 glicko_params = {"mu":1500, "phi": 350, "sigma":0.06, "tau":1.0, "epsilon":0.000001,
     "Q":math.log(10)/400}
 
@@ -31,6 +36,8 @@ def get_ratings(method='elo', params=None):
         env = TrueSkill(**params)
     elif method=='glicko':    
         env = gl.ModGlicko2(**params)
+    elif method=='elo_custom_k':
+        env = elo.CustomElo(**params)
     else:
         print "Select a valid method"
         exit()
@@ -38,6 +45,11 @@ def get_ratings(method='elo', params=None):
     ratings = []
     df_train = pd.read_csv("../data/cricket.csv")
     df_train.sort(columns="Date", inplace=True)
+    ## Additional preprocessing for feats
+    if method=='elo_custom_k':
+        df_train["Toss_Winner"] = df_train["Toss_Winner"]==df_train["Team1"]
+        df_train["Toss_Decision"] = LabelEncoder().fit_transform(df_train["Toss_Decision"])
+        df_train["Winnerby"] = LabelEncoder().fit(["runs","wickets"]).transform(df_train["Winnerby"])
 
     for i in ratings_id.keys():
         ratings_id[i] = env.create_rating()
@@ -60,8 +72,17 @@ def get_ratings(method='elo', params=None):
         if df_train.Team1[i] in df_train.Winner[i]:
             loser_id = df_train.Team2[i]
 
-        ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
-            df_train.Winnerby[i], df_train.Margin[i])
+        if not method=='elo_custom_k':
+            ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
+                df_train.Winnerby[i], df_train.Margin[i])
+        else:
+            feats = {}
+            feats["kf_wt_margin"] = df_train.Margin[i]
+            feats["kf_wt_winnerby"] = df_train.Winnerby[i]
+            feats["kf_wt_tossdecision"] = df_train.Toss_Decision[i]
+            feats["kf_wt_tosswinner"] = df_train.Toss_Winner[i]
+            ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
+                feats)
         # print loser_id, winner_id, rate_1vs1(winner_rate, loser_rate)
         # print ratings_id
         ratings.append(ratings_id.copy())
@@ -100,8 +121,8 @@ def rolling_validate(ratings, starti = 0.50, endi = 1):
 
     return 1.*err/(end-start)
 
-# ratings = get_ratings(method = 'elo', elo_params)
-# if visual:
-#     visualize(ratings)
+ratings = get_ratings(method = 'elo_custom_k', params=elo_params_k)
+if visual:
+    visualize(ratings)
 
-# print "Accuracy: ", 1-rolling_validate(ratings)
+print "Accuracy: ", 1-rolling_validate(ratings)
