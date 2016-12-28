@@ -76,3 +76,8 @@ print "Test Accuracy: ", 1-rolling_validate(final_ratings, starti=0.75, endi=1)
 # {'kf_wt_margin_runs': 0.08192817434904767, 'kf_wt_tosswinner': 0.019064236867300233, 'initial': 1200.0, 'kf_wt_rating': 0.07791829445880818, 'beta': 50.0, 'kf_wt_margin_wkts': 0.004559414606145076, 'kf_wt_tossdecision': 0.047789312566250075, 'kf_wt_winnerby': 0.05773614186948804}
 # Validation Accuracy:  0.97213622291
 # Test Accuracy:  0.965944272446
+
+# Best Scoring Value
+# {'kf_wt_margin_runs': 0.07118561288782543, 'kf_wt_tosswinner': 0.08854794739208635, 'initial': 1400.0, 'kf_wt_rating': 0.08227112184787663, 'beta': 50.0, 'kf_wt_margin_wkts': 0.00573260105371971, 'kf_wt_tossdecision': 0.07316698163763516, 'kf_wt_winnerby': 0.029236169074785153}
+# Validation Accuracy:  0.975232198142
+# Test Accuracy:  0.965944272446
