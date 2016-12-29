@@ -3,6 +3,8 @@ from numpy import *
 import numpy as np
 import igraph as ig
 import igraph.drawing
+from sklearn.metrics import log_loss
+import math
 
 def rolling_validate(ratings, starti, endi):
     df_train = pd.read_csv("../data/cricket.csv")
@@ -11,20 +13,29 @@ def rolling_validate(ratings, starti, endi):
     start = int(len(df_train.index)*starti)
     end = int(len(df_train.index)*endi)
     err = 0
+    y_true = []
+    y_pred = []
     for i in range(start, end):
         if df_train.Team1[i] not in teams_id.keys():
             continue
         if df_train.Team2[i] not in teams_id.keys():
             continue
 
-        if ratings[i][teams_id[df_train.Team1[i]]] > ratings[i][teams_id[df_train.Team2[i]]]:
+        team_probs = np.zeros(len(teams_id))
+        rating1 = ratings[i][teams_id[df_train.Team1[i]]]
+        rating2 = ratings[i][teams_id[df_train.Team2[i]]]
+        team_probs[teams_id[df_train.Team1[i]]] = 1./(1+math.exp(rating2-rating1))
+        team_probs[teams_id[df_train.Team2[i]]] = 1./(1+math.exp(rating1-rating2))
+        y_pred.append(team_probs)
+        y_true.append(df_train.Winner[i])
+        if rating1 > rating2:
             if df_train.Winner[i] == df_train.Team2[i]:
-                err += 1
-        if ratings[i][teams_id[df_train.Team1[i]]] < ratings[i][teams_id[df_train.Team2[i]]]:
+                err += 1            
+        if rating1 < rating2:
             if df_train.Winner[i] == df_train.Team1[i]:
                 err += 1
-    print err
-    return 1.*err/(end-start)
+    # return 1.*err/(end-start)
+    return log_loss(y_true, y_pred)
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -62,7 +73,7 @@ def create_weight_matrix(method_no):
             for m in range(len(teams_id)):
                 if played[l][m]!=0:
                     weight_matrix[l][m] = ((movrmatrix[l][m] / (1.*(played[l][m])))* (winrmatrix[l][m] / (1.*(played[l][m]))))
-
+    return weight_matrix
 
 linkmatrix = [[] for i in range(len(teams_id))]
 
@@ -110,20 +121,19 @@ for i in range(len(df_train.index)):
 
     # save_graph(g)
 
-    create_weight_matrix(1)
-    pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85, weights = weight_matrix, implementation="power"))
-    create_weight_matrix(2)
-    pr2[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85, weights = weight_matrix, implementation="power"))
-    create_weight_matrix(3)
-    pr3[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85, weights = weight_matrix, implementation="power"))
-    create_weight_matrix(4)
-    pr4[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85, weights = weight_matrix, implementation="power"))
+    pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+        weights = create_weight_matrix(1), implementation="power"))
+    pr2[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+        weights = create_weight_matrix(2), implementation="power"))
+    pr3[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+        weights = create_weight_matrix(3), implementation="power"))
+    pr4[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+        weights = create_weight_matrix(4), implementation="power"))
     
     # print weight_matrix
-
+print np.sum(np.array(pr1)-np.array(pr2))
+print pr1[:10], pr2[:10]
 print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
 print "Accuracy for Weighting function 2 :", (1 - rolling_validate(pr2, start_index, end_index))
 print "Accuracy for Weighting function 3 :", (1 - rolling_validate(pr3, start_index, end_index))
 print "Accuracy for Weighting function 4 :", (1 - rolling_validate(pr4, start_index, end_index))
-
-exit()
