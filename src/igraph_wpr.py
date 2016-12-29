@@ -46,7 +46,7 @@ def save_graph(g, layoutname = "fruchterman_reingold"):
     if layoutname == "kk":
         g.write_svg("newgraph.svg", labels = "name" , layout = g.layout(layoutname))
     else:
-        igraph.plot(g, 'newgraph.png', layout=g.layout(layoutname), bbox=(1000, 1000), margin=120, hovermode='closest', labels = "name")
+        igraph.plot(g, 'newgraph.png', layout=g.layout(layoutname), bbox=(1000, 1000), margin=120, hovermode='closest', vertex_label = g.vs["name"], edge_width = g.es["weight"])
 
 def create_weight_matrix(method_no):
     if method_no == 1:
@@ -116,8 +116,9 @@ for i in range(len(df_train.index)):
     runmatrix[toss_winner_id][toss_loser_id] += df_train.Run2[i]
 
     g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Adjacency(winmatrix, mode = "DIRECTED")
+    g = g.Weighted_Adjacency(winmatrix, mode = "DIRECTED")
     g.vs["name"] = teams_id.keys()
+    # print g.es["weight"]
 
     # save_graph(g)
 
@@ -131,6 +132,7 @@ for i in range(len(df_train.index)):
         weights = create_weight_matrix(4), implementation="power"))
     
     # print weight_matrix
+    
 print np.sum(np.array(pr1)-np.array(pr2))
 print pr1[:10], pr2[:10]
 print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
