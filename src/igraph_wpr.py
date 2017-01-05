@@ -5,6 +5,20 @@ import igraph as ig
 import igraph.drawing
 from sklearn.metrics import log_loss
 import math
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+
+def visualize(ratings):
+    full_ratings = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
+	"Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
+	"West Indies":10,"Zimbabwe":11,
+	}
+    xr = range(len(ratings))
+    for i in full_ratings.values():
+        full_ratings[i] = [j[i] for j in ratings]
+        lowess = sm.nonparametric.lowess(full_ratings[i], xr, frac=0.2)
+        plt.plot(lowess[:, 0], lowess[:, 1])
+    plt.show()
 
 def rolling_validate(ratings, starti, endi):
     df_train = pd.read_csv("../data/cricket.csv")
@@ -169,3 +183,4 @@ print "Accuracy for Weighting function 2 :", (1 - rolling_validate(pr2, start_in
 print "Accuracy for Weighting function 3 :", (1 - rolling_validate(pr3, start_index, end_index))
 print "Accuracy for Weighting function 4 :", (1 - rolling_validate(pr4, start_index, end_index))
 print "Accuracy for Weighting function 5 :", (1 - rolling_validate(pr5, start_index, end_index))
+visualize(pr5)
