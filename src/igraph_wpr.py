@@ -46,8 +46,8 @@ def save_graph(g, layoutname = "fruchterman_reingold"):
     if layoutname == "kk":
         g.write_svg("newgraph.svg", labels = "name" , layout = g.layout(layoutname))
     else:
-        igraph.plot(g, 'newgraph.png', layout=g.layout(layoutname), bbox=(1000, 1000), margin=120, hovermode='closest', vertex_label = g.vs["name"], edge_width = g.es["weight"])
-
+        igraph.plot(g, 'newgraph.png', layout=g.layout(layoutname), bbox=(1000, 1000), margin= 100, hovermode='closest', vertex_label = g.vs["name"], edge_width = g.es["weight"], vertex_color = "green", vertex_label_dist = 2, vertex_label_size = 25)
+ 
 def create_weight_matrix(method_no):
     if method_no == 1:
         # percentage of matches won 
@@ -124,48 +124,48 @@ for i in range(len(df_train.index)):
     runmatrix[toss_loser_id][toss_winner_id] += df_train.Run1[i]
     runmatrix[toss_winner_id][toss_loser_id] += df_train.Run2[i]
 
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Weighted_Adjacency(create_weight_matrix(1), mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-        implementation="power"))
-    # print g.es["weight"]
+g = ig.Graph.Full(n = len(teams_id), directed = True)
+# g = g.Weighted_Adjacency(create_weight_matrix(1), mode = "DIRECTED")
+g = g.Weighted_Adjacency(winmatrix, mode = "DIRECTED")
+g.vs["name"] = teams_id.keys()
+print g.es["weight"]
+# pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+#     implementation="power"))
+save_graph(g)
 
-    # save_graph(g)
+#     g = ig.Graph.Full(n = len(teams_id), directed = True)
+#     g = g.Weighted_Adjacency(create_weight_matrix(2), mode = "DIRECTED")
+#     g.vs["name"] = teams_id.keys()
+#     pr2[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+#         implementation="power"))
 
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Weighted_Adjacency(create_weight_matrix(2), mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    pr2[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-        implementation="power"))
+#     g = ig.Graph.Full(n = len(teams_id), directed = True)
+#     g = g.Weighted_Adjacency(create_weight_matrix(3), mode = "DIRECTED")
+#     g.vs["name"] = teams_id.keys()
+#     pr3[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+#         implementation="power"))
 
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Weighted_Adjacency(create_weight_matrix(3), mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    pr3[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-        implementation="power"))
+#     g = ig.Graph.Full(n = len(teams_id), directed = True)
+#     g = g.Weighted_Adjacency(create_weight_matrix(4), mode = "DIRECTED")
+#     g.vs["name"] = teams_id.keys()
+#     pr4[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+#         implementation="power"))
 
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Weighted_Adjacency(create_weight_matrix(4), mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    pr4[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-        implementation="power"))
+#     g = ig.Graph.Full(n = len(teams_id), directed = True)
+#     g = g.Weighted_Adjacency(create_weight_matrix(4), mode = "DIRECTED")
+#     g.vs["name"] = teams_id.keys()
+#     pr4[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+#         implementation="power"))
 
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Weighted_Adjacency(create_weight_matrix(4), mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    pr4[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-        implementation="power"))
+#     g = ig.Graph.Full(n = len(teams_id), directed = True)
+#     g = g.Weighted_Adjacency(create_weight_matrix(5), mode = "DIRECTED")
+#     g.vs["name"] = teams_id.keys()
+#     pr5[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
+#         implementation="power"))
+#     # print weight_matrix
 
-    g = ig.Graph.Full(n = len(teams_id), directed = True)
-    g = g.Weighted_Adjacency(create_weight_matrix(5), mode = "DIRECTED")
-    g.vs["name"] = teams_id.keys()
-    pr5[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-        implementation="power"))
-    # print weight_matrix
-
-print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
-print "Accuracy for Weighting function 2 :", (1 - rolling_validate(pr2, start_index, end_index))
-print "Accuracy for Weighting function 3 :", (1 - rolling_validate(pr3, start_index, end_index))
-print "Accuracy for Weighting function 4 :", (1 - rolling_validate(pr4, start_index, end_index))
-print "Accuracy for Weighting function 5 :", (1 - rolling_validate(pr5, start_index, end_index))
+# print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
+# print "Accuracy for Weighting function 2 :", (1 - rolling_validate(pr2, start_index, end_index))
+# print "Accuracy for Weighting function 3 :", (1 - rolling_validate(pr3, start_index, end_index))
+# print "Accuracy for Weighting function 4 :", (1 - rolling_validate(pr4, start_index, end_index))
+# print "Accuracy for Weighting function 5 :", (1 - rolling_validate(pr5, start_index, end_index))
