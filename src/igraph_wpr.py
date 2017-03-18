@@ -196,7 +196,6 @@ for i in range(len(df_train.index)):
     # g.vs["name"] = teams_id.keys()
     # pr5[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85))
     # print weight_matrix
-    # print pr2
 
 # visualize(pr5)
 # print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
@@ -204,3 +203,5 @@ for i in range(len(df_train.index)):
 # print "Accuracy for Weighting function 3 :", (1 - rolling_validate(pr3, start_index, end_index))
 # print "Accuracy for Weighting function 4 :", (1 - rolling_validate(pr4, start_index, end_index))
 # print "Accuracy for Weighting function 5 :", (1 - rolling_validate(pr5, start_index, end_index))
+
+
