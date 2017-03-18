@@ -48,9 +48,6 @@ teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 df_train = pd.read_csv("../data/cricket.csv")
 df_train.sort(columns="Date", inplace=True)
 
-start_index = 0.75
-end_index = 1.0
-
 # print len(df_train.index)*end_index
 def get_ratings(params):
     pr1 = [[0 for j in range(len(teams_id))] for i in range(len(df_train.index))]
@@ -95,11 +92,12 @@ def get_ratings(params):
         g = ig.Graph.Full(n = len(teams_id), directed = True)
         g = g.Weighted_Adjacency(weight_matrix, mode = "DIRECTED")
         g.vs["name"] = teams_id.keys()
-        pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85,
-            implementation="power"))
+        pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85))
     return pr1
 
-max_evals = 1000
+start_index = 0.5
+end_index = 0.75
+max_evals = 100
 def get_err(params):
     ratings = get_ratings(params)
     err = rolling_validate(ratings, start_index, end_index)

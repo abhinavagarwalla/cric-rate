@@ -251,10 +251,10 @@ class ModElo(Elo):
         """Calculates new ratings by the game result series."""
         rating = self.ensure_rating(rating)
         k = self.k_factor(rating) if callable(self.k_factor) else self.k_factor
-        if winnerby=="runs":
-            k = self.k_factor_run*((1+self.margin_run)**(1.*margin/self.margin_run_norm))
-        if winnerby=="wickets":
-            k = self.k_factor_wkts*((1+self.margin_wkts)**(margin))
+        # if winnerby=="runs":
+        #     k = self.k_factor_run*((1+self.margin_run)**(1.*margin/self.margin_run_norm))
+        # if winnerby=="wickets":
+        #     k = self.k_factor_wkts*((1+self.margin_wkts)**(margin))
         new_rating = float(rating) + k * self.adjust(rating, series)
         if hasattr(rating, 'rated'):
             new_rating = rating.rated(new_rating)
