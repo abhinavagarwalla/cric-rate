@@ -4,6 +4,7 @@ import csv
 import numpy as np
 from collections import defaultdict
 import pickle
+import copy
 
 folderloc = "../data/odis/"
 
@@ -42,7 +43,7 @@ for file in os.listdir(folderloc):
 		if bat_bowl_pair not in playerlist.keys():
 			playerlist[bat_bowl_pair] = 0
 		playerlist[bat_bowl_pair] += int(fl1ind[i][fl1ind[i].keys()[0]]["runs"]["total"])
-	data.append(playerlist.copy())
+	data.append(copy.deepcopy(playerlist))
 
 with open('../data/player_data.pkl', 'w') as fp:
 	pickle.dump(data, fp)
