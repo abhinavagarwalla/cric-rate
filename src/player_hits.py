@@ -5,8 +5,12 @@ import igraph.drawing
 import networkx as nx
 import matplotlib.pyplot as plt
 
-fp = open('../data/playerdict.pkl')
+fp = open('../data/player_data.pkl')
 plist = pickle.load(fp)
+print len(plist)
+for i in plist:
+	print len(i.keys())
+exit()
 bats = np.unique([i[0] for i in plist.keys()])
 bowls = np.unique([i[1] for i in plist.keys()])
 

@@ -8,8 +8,8 @@ import pickle
 folderloc = "../data/odis/"
 
 data = list()
-headers = ["Date", "Team1", "Team2", "Toss_Winner", "Toss_Decision", "Venue", "Run1", "Over1", "Wicket1", "Run2", "Over2", "Wicket2", "Winner", "Winnerby", "Margin"]
-data.append(headers)
+# headers = ["Date", "Team1", "Team2", "Toss_Winner", "Toss_Decision", "Venue", "Run1", "Over1", "Wicket1", "Run2", "Over2", "Wicket2", "Winner", "Winnerby", "Margin"]
+# data.append(headers)
 
 playerlist = defaultdict(dict)
 for file in os.listdir(folderloc):
@@ -42,8 +42,9 @@ for file in os.listdir(folderloc):
 		if bat_bowl_pair not in playerlist.keys():
 			playerlist[bat_bowl_pair] = 0
 		playerlist[bat_bowl_pair] += int(fl1ind[i][fl1ind[i].keys()[0]]["runs"]["total"])
+	data.append(playerlist.copy())
 
-with open('../data/playerdict.pkl', 'w') as fp:
-	pickle.dump(playerlist, fp)
+with open('../data/player_data.pkl', 'w') as fp:
+	pickle.dump(data, fp)
 
 print len(playerlist)
