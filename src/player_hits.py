@@ -10,7 +10,7 @@ def load_pickle():
     plist = pickle.load(fp)
 #    print len(plist[-1])
 #    for i in plist:
-#    	print len(i.keys())
+#       print len(i.keys())
     bats = np.unique([i[0] for i in plist[-1].keys()])
     bowls = np.unique([i[1] for i in plist[-1].keys()])
     return plist, bats, bowls
@@ -19,15 +19,19 @@ def load_pickle():
 plist, bats, bowls = load_pickle()
 hlist, alist = [], []
 
-for pl in range(100, len(plist)):
+for pl in range(len(plist)):
     print pl
-    playermat = np.zeros((len(bowls)+len(bats), len(bowls)+len(bats)))
-    for key, value in plist[pl].iteritems():
-        playermat[np.where(bowls==key[1])[0][0]][len(bowls)+np.where(bats==key[0])[0][0]] = value
-    G = nx.from_numpy_matrix(playermat)
-    h, a = nx.hits(G)
-    hlist.append(h)
-    alist.append(a)
+    try:
+        playermat = np.zeros((len(bowls)+len(bats), len(bowls)+len(bats)))
+        for key, value in plist[pl].iteritems():
+            playermat[np.where(bowls==key[1])[0][0]][len(bowls)+np.where(bats==key[0])[0][0]] = value
+        G = nx.from_numpy_matrix(playermat)
+        h, a = nx.hits(G)
+        hlist.append(h)
+        alist.append(a)
+    except:
+        hlist.append([0])
+        alist.append([0])
 
 with open('../data/player_hlist.pkl', 'w') as fp:
     pickle.dump(hlist, fp)
