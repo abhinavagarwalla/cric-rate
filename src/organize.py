@@ -2,14 +2,19 @@ import yaml
 import os, sys
 import csv
 import numpy as np
+import pickle
 
 folderloc = "../data/odis/"
 
 data = list()
 headers = ["Date", "Team1", "Team2", "Toss_Winner", "Toss_Decision", "Venue", "Run1", "Over1", "Wicket1", "Run2", "Over2", "Wicket2", "Winner", "Winnerby", "Margin"]
 data.append(headers)
+teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
+"Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
+"West Indies":10,"Zimbabwe":11,}
 
-for file in os.listdir(folderloc):
+feed_list = pickle.load(open('../data/feed_list.pkl'))
+for file in feed_list:
 	print file
 	if 'yaml' not in file:
 		continue
@@ -23,7 +28,12 @@ for file in os.listdir(folderloc):
 
 	if 'winner' not in file1["info"]["outcome"]:
 		continue
-		
+	
+	if file1["info"]["teams"][0] not in teams_id.keys():
+			continue
+	if file1["info"]["teams"][1] not in teams_id.keys():
+			continue 
+
 	match.append(file1["info"]["dates"][0])
 	match.append(file1["info"]["teams"][0])
 	match.append(file1["info"]["teams"][1])

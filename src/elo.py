@@ -296,3 +296,45 @@ class CustomElo(Elo):
         if hasattr(rating, 'rated'):
             new_rating = rating.rated(new_rating)
         return new_rating
+
+class HitsElo(Elo):
+    def __init__(self, rating_class=float,
+                 initial=1200, beta=200, kf_wt_rating=1., 
+                 kf_wt_margin_runs=.1, kf_wt_margin_wkts=.1,
+                 kf_wt_winnerby=.1,
+                 kf_wt_tossdecision=.1,kf_wt_tosswinner=.1,
+                 kf_wt_bats=.1, kf_wt_bowls=.1):
+        self.rating_class = rating_class
+        self.initial = initial
+        self.beta = beta
+        self.kf_wt_rating = kf_wt_rating
+        self.kf_wt_margin_runs = kf_wt_margin_runs
+        self.kf_wt_margin_wkts = kf_wt_margin_wkts
+        self.kf_wt_winnerby = kf_wt_winnerby
+        self.kf_wt_tossdecision = kf_wt_tossdecision
+        self.kf_wt_tosswinner = kf_wt_tosswinner
+        self.kf_wt_bats = kf_wt_bats
+        self.kf_wt_bowls = kf_wt_bowls         
+
+    def rate_1vs1(self, rating1, rating2, feats, drawn=False):
+        scores = (DRAW, DRAW) if drawn else (WIN, LOSS)
+        return (self.rate(rating1, [(scores[0], rating2)], feats),
+                self.rate(rating2, [(scores[1], rating1)], feats))
+
+    def rate(self, rating, series, feats):
+        """Calculates new ratings by the game result series."""
+        rating = self.ensure_rating(rating)
+        k = self.kf_wt_rating*rating + \
+            self.kf_wt_winnerby*feats["kf_wt_winnerby"] + \
+            self.kf_wt_tossdecision*feats["kf_wt_tossdecision"] + \
+            self.kf_wt_tosswinner*feats["kf_wt_tosswinner"] +\
+            self.kf_wt_bats*feats["kf_wt_bats"] +\
+            self.kf_wt_bowls*feats["kf_wt_bowls"] 
+        if feats["kf_wt_winnerby"]:
+            k += self.kf_wt_margin_runs*feats["kf_wt_margin"]
+        else:
+            k += self.kf_wt_margin_wkts*feats["kf_wt_margin"]
+        new_rating = float(rating) + k * self.adjust(rating, series)
+        if hasattr(rating, 'rated'):
+            new_rating = rating.rated(new_rating)
+        return new_rating

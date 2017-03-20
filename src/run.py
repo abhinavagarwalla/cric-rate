@@ -138,9 +138,9 @@ def rolling_validate(ratings, starti = 0.50, endi = 1):
 
     return 1.*err/(end-start)
 
-ratings = get_ratings(method = 'elo', params=elo_params)
-if visual:
-    visualize(ratings)
+# ratings = get_ratings(method = 'elo', params=elo_params)
+# if visual:
+#     visualize(ratings)
 
-# vis_nmatches()
-print "Accuracy: ", 1-rolling_validate(ratings)
+# # vis_nmatches()
+# print "Accuracy: ", 1-rolling_validate(ratings)

@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import elo as elo
 import glicko as gl
-# from trueskill import TrueSkill, Rating, quality_1vs1, rate_1vs1
 import math
 # from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 from sklearn.preprocessing import LabelEncoder
+import pickle
+import numpy as np
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -24,38 +25,47 @@ elo_params = {"k_factor":10, "rating_class":float, "initial":1200, "beta":200,
     "margin_run":0.2, "margin_run_norm":50., "margin_wkts":0.2,
     "k_factor_run":10, "k_factor_wkts":10}
 
-# elo_params_k = {"rating_class":float, "initial":1200, "beta":200,
-    # "kf_wt_rating":.1, "kf_wt_margin_runs":.1, "kf_wt_margin_wkts":.1,
-    # "kf_wt_winnerby":.1,"kf_wt_tossdecision":.1,"kf_wt_tosswinner":.1}
+elo_params_h = {"rating_class":float, "initial":1200, "beta":200,
+    "kf_wt_rating":.1, "kf_wt_margin_runs":.1, "kf_wt_margin_wkts":.1,
+    "kf_wt_winnerby":.1,"kf_wt_tossdecision":.1,"kf_wt_tosswinner":.1,
+    "kf_wt_bats": 1, "kf_wt_bowls": 1}
 
-elo_params_k = {'kf_wt_margin_runs': 0.08192817434904767, 'kf_wt_tosswinner': 0.019064236867300233, 'initial': 1200.0, 'kf_wt_rating': 0.07791829445880818, 'beta': 50.0, 'kf_wt_margin_wkts': 0.004559414606145076, 'kf_wt_tossdecision': 0.047789312566250075, 'kf_wt_winnerby': 0.05773614186948804}
+# elo_params_k = {'kf_wt_margin_runs': 0.08192817434904767, 'kf_wt_tosswinner': 0.019064236867300233, 'initial': 1200.0, 'kf_wt_rating': 0.07791829445880818, 'beta': 50.0, 'kf_wt_margin_wkts': 0.004559414606145076, 'kf_wt_tossdecision': 0.047789312566250075, 'kf_wt_winnerby': 0.05773614186948804}
 
 glicko_params = {"mu":1500, "phi": 350, "sigma":0.06, "tau":1.0, "epsilon":0.000001,
     "Q":math.log(10)/400}
 
-visual = True
+visual = False
+bmen = pickle.load(open('../data/batsmen.pkl'))
+bler = pickle.load(open('../data/bowlers.pkl'))
 
-def get_ratings(method='elo', params=None):
-    if method=='elo':
-        env = elo.ModElo(**params)
-    elif method=='trueskill':
-        env = TrueSkill(**params)
-    elif method=='glicko':    
-        env = gl.ModGlicko2(**params)
-    elif method=='elo_custom_k':
-        env = elo.CustomElo(**params)
-    else:
-        print "Select a valid method"
-        exit()
+def get_bowl_diff(h, tlist, winner_id, loser_id):
+    if type(h) is list:
+        return 0
+    wlist = [np.where(bler==i)[0][0] for i in tlist[winner_id] if i in bler]
+    llist = [np.where(bler==i)[0][0] for i in tlist[loser_id] if i in bler]    
+    return np.sum(np.asarray(sorted(map(h.get, wlist), reverse=True)[:5])-np.asarray(sorted(map(h.get, llist), reverse=True)[:5]))
 
+def get_bat_diff(a, tlist, winner_id, loser_id):
+    if type(a) is list:
+        return 0
+    wlist = [len(bler)+np.where(bmen==i)[0][0] for i in tlist[winner_id] if i in bmen]
+    llist = [len(bler)+np.where(bmen==i)[0][0] for i in tlist[loser_id] if i in bmen]    
+    return np.sum(np.asarray(sorted(map(a.get, wlist), reverse=True)[:6])-np.asarray(sorted(map(a.get, llist), reverse=True)[:6]))
+
+def get_ratings(params=None):
+    env = elo.HitsElo(**params)
     ratings = []
     df_train = pd.read_csv("../data/cricket.csv")
+
+    hlist = pickle.load(open('../data/player_hlist.pkl'))
+    alist = pickle.load(open('../data/player_alist.pkl'))
+    tlist = pickle.load(open('../data/player_teams.pkl'))
     df_train.sort(columns="Date", inplace=True)
     ## Additional preprocessing for feats
-    if method=='elo_custom_k':
-        df_train["Toss_Winner"] = df_train["Toss_Winner"]==df_train["Team1"]
-        df_train["Toss_Decision"] = LabelEncoder().fit_transform(df_train["Toss_Decision"])
-        df_train["Winnerby"] = LabelEncoder().fit(["runs","wickets"]).transform(df_train["Winnerby"])
+    df_train["Toss_Winner"] = df_train["Toss_Winner"]==df_train["Team1"]
+    df_train["Toss_Decision"] = LabelEncoder().fit_transform(df_train["Toss_Decision"])
+    df_train["Winnerby"] = LabelEncoder().fit(["runs","wickets"]).transform(df_train["Winnerby"])
 
     for i in ratings_id.keys():
         ratings_id[i] = env.create_rating(value=1000)
@@ -80,17 +90,15 @@ def get_ratings(method='elo', params=None):
         if df_train.Team1[i] in df_train.Winner[i]:
             loser_id = df_train.Team2[i]
 
-        if not method=='elo_custom_k':
-            ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
-                df_train.Winnerby[i], df_train.Margin[i])
-        else:
-            feats = {}
-            feats["kf_wt_margin"] = df_train.Margin[i]
-            feats["kf_wt_winnerby"] = df_train.Winnerby[i]
-            feats["kf_wt_tossdecision"] = df_train.Toss_Decision[i]
-            feats["kf_wt_tosswinner"] = df_train.Toss_Winner[i]
-            ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
-                feats)
+        feats = {}
+        feats["kf_wt_margin"] = df_train.Margin[i]
+        feats["kf_wt_winnerby"] = df_train.Winnerby[i]
+        feats["kf_wt_tossdecision"] = df_train.Toss_Decision[i]
+        feats["kf_wt_tosswinner"] = df_train.Toss_Winner[i]
+        feats["kf_wt_bats"] = get_bat_diff(alist[i], tlist, winner_id, loser_id)
+        feats["kf_wt_bowls"] = get_bowl_diff(hlist[i], tlist, winner_id, loser_id)
+        ratings_id[winner_id], ratings_id[loser_id] = env.rate_1vs1(winner_rate, loser_rate, 
+            feats)
         # print loser_id, winner_id, rate_1vs1(winner_rate, loser_rate)
         # print ratings_id
         ratings.append(ratings_id.copy())
@@ -138,9 +146,9 @@ def rolling_validate(ratings, starti = 0.50, endi = 1):
 
     return 1.*err/(end-start)
 
-ratings = get_ratings(method = 'elo', params=elo_params)
-if visual:
-    visualize(ratings)
+# ratings = get_ratings(params=elo_params_h)
+# if visual:
+#     visualize(ratings)
 
-# vis_nmatches()
-print "Accuracy: ", 1-rolling_validate(ratings)
+# # vis_nmatches()
+# print "Accuracy: ", 1-rolling_validate(ratings)
