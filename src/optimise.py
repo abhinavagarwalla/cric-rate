@@ -28,15 +28,27 @@ elo_k_params_grid = {"rating_class":float,
     				"kf_wt_tossdecision":hp.uniform("kf_wt_tossdecision", 0, 0.1),
     				"kf_wt_tosswinner":hp.uniform("kf_wt_tosswinner", 0, 0.1)}
 
+# elo_h_params_grid = {"rating_class":float,
+# 					"initial":hp.quniform("initial", 800, 1500, 100),
+# 					"beta":hp.quniform("beta", 50, 500, 50),
+#     				"kf_wt_rating":hp.uniform("kf_wt_rating", 0, 0.1),
+#     				"kf_wt_margin_runs":hp.uniform("kf_wt_margin_runs", 0, 0.1),
+#     				"kf_wt_margin_wkts":hp.uniform("kf_wt_margin_wkts", 0, 0.1),
+#     				"kf_wt_winnerby":hp.uniform("kf_wt_winnerby", 0, 0.1),
+#     				"kf_wt_tossdecision":hp.uniform("kf_wt_tossdecision", 0, 0.1),
+#     				"kf_wt_tosswinner":hp.uniform("kf_wt_tosswinner", 0, 0.1),
+#     				"kf_wt_bats":hp.uniform("kf_wt_bats", 0, 4),
+#     				"kf_wt_bowls":hp.uniform("kf_wt_bowls", 0, 4)}
+
 elo_h_params_grid = {"rating_class":float,
 					"initial":hp.quniform("initial", 800, 1500, 100),
 					"beta":hp.quniform("beta", 50, 500, 50),
     				"kf_wt_rating":hp.uniform("kf_wt_rating", 0, 0.1),
-    				"kf_wt_margin_runs":hp.uniform("kf_wt_margin_runs", 0, 0.1),
-    				"kf_wt_margin_wkts":hp.uniform("kf_wt_margin_wkts", 0, 0.1),
-    				"kf_wt_winnerby":hp.uniform("kf_wt_winnerby", 0, 0.1),
-    				"kf_wt_tossdecision":hp.uniform("kf_wt_tossdecision", 0, 0.1),
-    				"kf_wt_tosswinner":hp.uniform("kf_wt_tosswinner", 0, 0.1),
+    				"kf_wt_margin_runs":.1,
+    				"kf_wt_margin_wkts":.1,
+    				"kf_wt_winnerby":.1,
+    				"kf_wt_tossdecision":.1,
+    				"kf_wt_tosswinner":.1,
     				"kf_wt_bats":hp.uniform("kf_wt_bats", 0, 4),
     				"kf_wt_bowls":hp.uniform("kf_wt_bowls", 0, 4)}
 
@@ -81,7 +93,7 @@ print('\n\nBest Scoring Value')
 print(best)
 
 if optimise_algo == 'elo_hits':
-	final_ratings = eh.get_ratings(optimise_algo, best)
+	final_ratings = eh.get_ratings(best)
 	print "Validation Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.5, endi=0.75)
 	print "Test Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.75, endi=1)
 else:

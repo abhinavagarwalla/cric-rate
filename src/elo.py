@@ -316,10 +316,28 @@ class HitsElo(Elo):
         self.kf_wt_bats = kf_wt_bats
         self.kf_wt_bowls = kf_wt_bowls         
 
-    def rate_1vs1(self, rating1, rating2, feats, drawn=False):
+    def rate_1vs1(self, rating1, rating2, feats, drawn=False, exp=False):
         scores = (DRAW, DRAW) if drawn else (WIN, LOSS)
+        if exp:
+            return (self.rate_exp(rating1, [(scores[0], rating2)], feats),
+                self.rate_exp(rating2, [(scores[1], rating1)], feats))
         return (self.rate(rating1, [(scores[0], rating2)], feats),
                 self.rate(rating2, [(scores[1], rating1)], feats))
+
+    def rate_exp(self, rating, series, feats):
+        """Calculates new ratings by the game result series."""
+        rating = self.ensure_rating(rating)
+        k = (self.kf_wt_rating*rating) * \
+            ((1 + feats["kf_wt_bats"])**self.kf_wt_bats) *\
+            ((1 + feats["kf_wt_bowls"])**self.kf_wt_bowls) 
+        # if feats["kf_wt_winnerby"]:
+        #     k *= (1 + feats["kf_wt_margin"])**self.kf_wt_margin_runs
+        # else:
+        #     k *= (1 + feats["kf_wt_margin"])**self.kf_wt_margin_wkts
+        new_rating = float(rating) + k * self.adjust(rating, series)
+        if hasattr(rating, 'rated'):
+            new_rating = rating.rated(new_rating)
+        return new_rating
 
     def rate(self, rating, series, feats):
         """Calculates new ratings by the game result series."""
