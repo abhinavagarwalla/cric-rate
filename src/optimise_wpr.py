@@ -14,6 +14,7 @@ def rolling_validate(ratings, starti, endi):
     start = int(len(df_train.index)*starti)
     end = int(len(df_train.index)*endi)
     err = 0
+    err_log = 0
     y_true = []
     y_pred = []
     for i in range(start, end):
@@ -35,8 +36,10 @@ def rolling_validate(ratings, starti, endi):
         if rating1 < rating2:
             if df_train.Winner[i] == df_train.Team1[i]:
                 err += 1
+
+    print "Accuracy: ", 1-1.*err/(end-start)
+    print "Log Loss: ", log_loss(y_true, y_pred)
     return 1.*err/(end-start)
-    # return log_loss(y_true, y_pred)
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -87,6 +90,7 @@ def get_ratings(params):
                     b = runmatrix[l][m] / (1.*played[l][m])
                     c = movrmatrix[l][m] / (1.*played[l][m])
                     d = (movrmatrix[l][m] / (1.*played[l][m]))* (winrmatrix[l][m] / (1.*(played[l][m])))
+                    # print a,b,c,d
                     weight_matrix[l][m] = xa*a + xb*b + xc*c + xd*d
 
         g = ig.Graph.Full(n = len(teams_id), directed = True)
@@ -101,13 +105,13 @@ max_evals = 100
 def get_err(params):
     ratings = get_ratings(params)
     err = rolling_validate(ratings, start_index, end_index)
-    print "Accuracy: ", 1-err, "  with params: ", params
+    print "  with params: ", params
     return {'loss': err, 'status': STATUS_OK}
 
-wpr_params_grid = {"xa":hp.uniform("xa", 0.01, 1.0),
-                    "xb":hp.uniform("xb", 0.01, 1.0),
-                    "xc":hp.uniform("xc", 0.01, 1.0),
-                    "xd":hp.uniform("xd", 0.01, 1.0)}
+wpr_params_grid = {"xa":hp.uniform("xa", -10.0, 10.0),
+                    "xb":hp.uniform("xb", -10.0, 10.0),
+                    "xc":hp.uniform("xc", -10.0, 10.0),
+                    "xd":hp.uniform("xd", -10.0, 10.0)}
 wpr_params = {"xa":0.0, "xb":1.0, "xc": 0., "xd": 0.}
 best = fmin(get_err, wpr_params_grid, algo=tpe.suggest, trials=Trials(), max_evals=max_evals)
 
@@ -116,5 +120,5 @@ print('\n\nBest Scoring Value')
 print(best)
 
 final_ratings = get_ratings(best)
-print "Validation Accuracy: ", 1-rolling_validate(final_ratings, starti=0.5, endi=0.75)
-print "Test Accuracy: ", 1-rolling_validate(final_ratings, starti=0.75, endi=1)
+print "Validation:  ", 1-rolling_validate(final_ratings, starti=0.5, endi=0.75)
+print "Test: ", 1-rolling_validate(final_ratings, starti=0.75, endi=1)

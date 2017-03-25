@@ -54,8 +54,9 @@ def rolling_validate(ratings, starti, endi):
         if rating1 < rating2:
             if df_train.Winner[i] == df_train.Team1[i]:
                 err += 1
+    print "Accuracy: ", 1-1.*err/(end-start)
+    print "Log Loss: ", log_loss(y_true, y_pred)
     return 1.*err/(end-start)
-    # return log_loss(y_true, y_pred)
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -144,12 +145,12 @@ for i in range(len(df_train.index)):
     runmatrix[toss_loser_id][toss_winner_id] += df_train.Run1[i]
     runmatrix[toss_winner_id][toss_loser_id] += df_train.Run2[i]
 
-    # g = ig.Graph.Full(n = len(teams_id), directed = True)
+    g = ig.Graph.Full(n = len(teams_id), directed = True)
     # g = g.Weighted_Adjacency(create_weight_matrix(1), mode = "DIRECTED")
-    # # g = g.Weighted_Adjacency(winmatrix, mode = "DIRECTED")
-    # g.vs["name"] = teams_id.keys()
+    g = g.Weighted_Adjacency(winmatrix, mode = "DIRECTED")
+    g.vs["name"] = teams_id.keys()
     # # print g.es["weight"]
-    # pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85))
+    pr1[i] = (g.pagerank(vertices = None, directed = True, damping = 0.85))
     # save_graph(g)
 
 #******************* Heatmap ******************
@@ -198,7 +199,7 @@ for i in range(len(df_train.index)):
     # print weight_matrix
 
 # visualize(pr5)
-# print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
+print "Accuracy for Weighting function 1 : ", (1 - rolling_validate(pr1, start_index, end_index))
 # print "Accuracy for Weighting function 2 :", (1 - rolling_validate(pr2, start_index, end_index))
 # print "Accuracy for Weighting function 3 :", (1 - rolling_validate(pr3, start_index, end_index))
 # print "Accuracy for Weighting function 4 :", (1 - rolling_validate(pr4, start_index, end_index))
