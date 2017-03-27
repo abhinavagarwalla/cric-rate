@@ -8,9 +8,15 @@ import copy
 
 folderloc = "../data/odis/"
 
+team_players = {"Afghanistan":[], "Australia":[],"Bangladesh":[],"England":[],"India":[],
+"Ireland":[], "New Zealand":[],"Pakistan":[],"South Africa":[],"Sri Lanka":[],
+"West Indies":[],"Zimbabwe":[],}
+
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
 "West Indies":10,"Zimbabwe":11,}
+
+
 
 def save_dict():
 	data = list()
@@ -157,6 +163,6 @@ def get_player_teams():
     with open('../data/player_teams.pkl','w') as fp:
         pickle.dump(team_players, fp)
 
-# get_player_teams()
+get_player_teams()
 # get_sorted_matches()
-save_dict()
+# save_dict()

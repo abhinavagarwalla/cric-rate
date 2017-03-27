@@ -3,25 +3,32 @@ import numpy as np
 import igraph as ig
 import igraph.drawing
 import networkx as nx
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 def load_pickle():
+    print "Reading player_data.pkl file"
     fp = open('../data/player_data.pkl')
     plist = pickle.load(fp)
     bats = np.unique([i[0] for i in plist[-1].keys()])
     bowls = np.unique([i[1] for i in plist[-1].keys()])
     return plist, bats, bowls
 
-def get_hubs_auth():
+def get_hubs_auth(params=None):
     plist, bats, bowls = load_pickle()
     hlist, alist = [], []
-
+    print "Calculating weighing function"
     for pl in range(len(plist)):
         print pl
         try:
             playermat = np.zeros((len(bowls)+len(bats), len(bowls)+len(bats)))
             for key, value in plist[pl].iteritems():
-                playermat[np.where(bowls==key[1])[0][0]][len(bowls)+np.where(bats==key[0])[0][0]] = value
+                a = (value["runs"]/value["balls"])
+                b = (value["dots"]/value["balls"])
+                c = value["matches"]
+                d = value["sixes"]
+                e = value["fours"]
+                weighted_score = ((hits_alpha1*a) + (hits_alpha2*b) + (hits_alpha3*c) + (hits_alpha4*d) + (hits_alpha5*e))
+                playermat[np.where(bowls==key[1])[0][0]][len(bowls)+np.where(bats==key[0])[0][0]] = weighted_score
             G = nx.from_numpy_matrix(playermat)
             h, a = nx.hits(G)
             hlist.append(h)
@@ -42,12 +49,18 @@ def get_hubs_auth():
     with open('../data/bowlers.pkl', 'w') as fp:
         pickle.dump(bowls, fp)
 
-def player_graph():
+def player_graph(params):
     plist, bats, bowls = load_pickle()
     plist = plist[-1]
     playermat = [[0 for i in range(len(bowls)+len(bats))] for j in range(len(bowls)+len(bats))]
     for key, value in plist.iteritems():
-        playermat[np.where(bowls==key[1])[0][0]][len(bowls)+np.where(bats==key[0])[0][0]] = value/50.
+        a = (value["runs"]/value["balls"])
+        b = (value["dots"]/value["balls"])
+        c = value["matches"]
+        d = value["sixes"]
+        e = value["fours"]
+        weighted_score = ((hits_alpha1*a) + (hits_alpha2*b) + (hits_alpha3*c) + (hits_alpha4*d) + (hits_alpha5*e))
+        playermat[np.where(bowls==key[1])[0][0]][len(bowls)+np.where(bats==key[0])[0][0]] = weighted_score/50.
     
     G = nx.from_numpy_matrix(np.array(playermat))
     h, a = nx.hits(G)
@@ -78,3 +91,5 @@ def save_graph(g, layoutname = "fruchterman_reingold"):
 #plt.bar(range(len(h)), h.values(), align='center')
 #plt.xticks(range(len(h)), h.keys())
 #plt.show(h)
+# load_pickle()
+# get_hubs_auth()

@@ -8,6 +8,7 @@ import math
 from sklearn.preprocessing import LabelEncoder
 import pickle
 import numpy as np
+import player_hits as ph
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,

@@ -1,13 +1,14 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import elo as elo
 import glicko as gl
-from trueskill import TrueSkill, Rating, quality_1vs1, rate_1vs1
+# from trueskill import TrueSkill, Rating, quality_1vs1, rate_1vs1
 import math
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 from run import get_ratings, rolling_validate
 import elo_hits as eh
+import player_hits as ph
 
 elo_params_grid = {"k_factor":hp.quniform("k_factor", 5, 100,5), "rating_class":float,
 					"initial":hp.quniform("initial", 800, 1500, 100),
@@ -50,7 +51,13 @@ elo_h_params_grid = {"rating_class":float,
     				"kf_wt_tossdecision":.1,
     				"kf_wt_tosswinner":.1,
     				"kf_wt_bats":hp.uniform("kf_wt_bats", 0, 4),
-    				"kf_wt_bowls":hp.uniform("kf_wt_bowls", 0, 4)}
+    				"kf_wt_bowls":hp.uniform("kf_wt_bowls", 0, 4),
+    				"hits_alpha1":.1,
+    				"hits_alpha2":.1,
+    				"hits_alpha3":.1,
+    				"hits_alpha4":.1,
+    				"hits_alpha5":.1,
+    				}
 
 glicko_params_grid = {"mu":hp.quniform("mu", 800, 1500, 100),
 						"phi": hp.quniform("phi", 100, 800, 50),
@@ -67,14 +74,17 @@ trueskill_params_grid = {"mu":hp.quniform("mu", 5, 100, 5),
 
 optimise_algo = 'elo_hits'
 max_evals = 100
+
 def get_err(params):
 	if optimise_algo == 'elo_hits':
+		ph.load_pickle()
+		ph.get_hubs_auth(params)
 		ratings = eh.get_ratings(params)
 		err = eh.rolling_validate(ratings, starti=0.50, endi=0.75)
 	else:
 		ratings = get_ratings(optimise_algo, params)
 		err = rolling_validate(ratings, starti=0.50, endi=0.75)
-	print "Accuracy: ", 1-err, "  with params: ", params
+	print ("Accuracy: " + 1-err + "  with params: " + params)
 	return {'loss': err, 'status': STATUS_OK}
 
 trials = Trials()
@@ -90,10 +100,14 @@ elif optimise_algo=='elo_custom_k':
 elif optimise_algo=='elo_hits':
 	best = fmin(get_err, elo_h_params_grid, algo=tpe.suggest, trials=trials, max_evals=max_evals)
 print('\n\nBest Scoring Value')
+
 print(best)
+best1 = {k:best[k] for k in ('rating_class','initial','beta','kf_wt_rating','kf_wt_margin_runs','kf_wt_margin_wkts','kf_wt_winnerby','kf_wt_tossdecision','kf_wt_tosswinner','kf_wt_bats','kf_wt_bowls') if k in best}
+best2 = {k:best[k] for k in ('hits_alpha1','hits_alpha2','hits_alpha3','hits_alpha4','hits_alpha5') if k in best}
 
 if optimise_algo == 'elo_hits':
-	final_ratings = eh.get_ratings(best)
+	ph.get_hubs_auth(best2)
+	final_ratings = eh.get_ratings(best1)
 	print "Validation Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.5, endi=0.75)
 	print "Test Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.75, endi=1)
 else:
