@@ -80,7 +80,7 @@ def get_err(params):
 		ph.load_pickle()
 		ph.get_hubs_auth(params)
 		ratings = eh.get_ratings(params)
-		err = eh.rolling_validate(ratings, starti=0.50, endi=0.75)
+		err = eh.rolling_validate(ratings, starti=0.50, endi=0.75, beta=params["beta"])
 	else:
 		ratings = get_ratings(optimise_algo, params)
 		err = rolling_validate(ratings, starti=0.50, endi=0.75)
@@ -112,8 +112,8 @@ if optimise_algo == 'elo_hits':
 	print "Test Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.75, endi=1)
 else:
 	final_ratings = get_ratings(optimise_algo, best)
-	print "Validation Accuracy: ", 1-rolling_validate(final_ratings, starti=0.5, endi=0.75)
-	print "Test Accuracy: ", 1-rolling_validate(final_ratings, starti=0.75, endi=1)
+	print "Validation Accuracy: ", 1-rolling_validate(final_ratings, starti=0.5, endi=0.75, beta=best["beta"])
+	print "Test Accuracy: ", 1-rolling_validate(final_ratings, starti=0.75, endi=1, beta=best["beta"])
 
 # Best Scoring Value
 # {'margin_run': 0.0, 'k_factor_wkts': 100.0, 'initial': 1100.0, 'margin_run_norm': 80.0, 

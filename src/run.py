@@ -116,13 +116,15 @@ def vis_nmatches():
     plt.xticks(range(len(nmatches)), nmatches.keys())
     plt.show()
 
-def rolling_validate(ratings, starti = 0.50, endi = 1):
+def rolling_validate(ratings, starti = 0.50, endi = 1, beta=50):
     df_train = pd.read_csv("../data/cricket.csv")
     df_train.sort(columns="Date", inplace=True)
 
+    env = elo.Elo(beta=beta)
     start = int(len(df_train.index)*starti)
     end = int(len(df_train.index)*endi)
     err = 0
+    err_log = 0
     for i in range(start, end):
         if df_train.Team1[i] not in teams_id.keys():
             continue
@@ -136,6 +138,15 @@ def rolling_validate(ratings, starti = 0.50, endi = 1):
             if df_train.Winner[i] == df_train.Team1[i]:
                 err += 1
 
+        ## Function for log-loss
+        pa = env.expect(ratings[i][df_train.Team1[i]], ratings[i][df_train.Team2[i]])
+        pb = 1-pa
+        if df_train.Winner[i] == df_train.Team1[i]:
+            err_log += -math.log(pa)*0.5
+        else:
+            err_log += -math.log(pb)*0.5
+    print "Accuracy: ", 1 - 1.*err/(end-start)
+    print "Log Loss: ", err_log/(end-start)
     return 1.*err/(end-start)
 
 # ratings = get_ratings(method = 'elo', params=elo_params)
