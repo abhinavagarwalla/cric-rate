@@ -77,14 +77,14 @@ max_evals = 100
 
 def get_err(params):
 	if optimise_algo == 'elo_hits':
-		ph.load_pickle()
-		ph.get_hubs_auth(params)
-		ratings = eh.get_ratings(params)
+		params1 = {k:params[k] for k in ('rating_class','initial','beta','kf_wt_rating','kf_wt_margin_runs','kf_wt_margin_wkts','kf_wt_winnerby','kf_wt_tossdecision','kf_wt_tosswinner','kf_wt_bats','kf_wt_bowls') if k in params}
+		params2 = {k:params[k] for k in ('hits_alpha1','hits_alpha2','hits_alpha3','hits_alpha4','hits_alpha5') if k in params}
+		ratings = eh.get_ratings(params1, params2)
 		err = eh.rolling_validate(ratings, starti=0.50, endi=0.75, beta=params["beta"])
 	else:
 		ratings = get_ratings(optimise_algo, params)
 		err = rolling_validate(ratings, starti=0.50, endi=0.75)
-	print ("Accuracy: " + 1-err + "  with params: " + params)
+	print "Accuracy: " , 1-err , "  with params: " , params
 	return {'loss': err, 'status': STATUS_OK}
 
 trials = Trials()
@@ -106,8 +106,7 @@ best1 = {k:best[k] for k in ('rating_class','initial','beta','kf_wt_rating','kf_
 best2 = {k:best[k] for k in ('hits_alpha1','hits_alpha2','hits_alpha3','hits_alpha4','hits_alpha5') if k in best}
 
 if optimise_algo == 'elo_hits':
-	ph.get_hubs_auth(best2)
-	final_ratings = eh.get_ratings(best1)
+	final_ratings = eh.get_ratings(best1, best2)
 	print "Validation Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.5, endi=0.75)
 	print "Test Accuracy: ", 1-eh.rolling_validate(final_ratings, starti=0.75, endi=1)
 else:
