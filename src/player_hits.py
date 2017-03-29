@@ -5,20 +5,24 @@ import numpy as np
 import networkx as nx
 # import matplotlib.pyplot as plt
 
+pickle_loaded = False
+
 def load_pickle():
     print "Reading player_data.pkl file"
     fp = open('../data/player_data.pkl')
     plist = pickle.load(fp)
     bats = np.unique([i[0] for i in plist[-1].keys()])
     bowls = np.unique([i[1] for i in plist[-1].keys()])
+    pickle_loaded = True
     return plist, bats, bowls
 
 def get_hubs_auth(params=None):
-    plist, bats, bowls = load_pickle()
+    if pickle_loaded == False:
+        plist, bats, bowls = load_pickle()
     hlist, alist = [], []
     print "Calculating weighing function"
     for pl in range(len(plist)):
-        print pl
+        # print pl
         try:
             playermat = np.zeros((len(bowls)+len(bats), len(bowls)+len(bats)))
             for key, value in plist[pl].iteritems():
