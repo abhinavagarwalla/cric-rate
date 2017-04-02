@@ -1,5 +1,5 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import elo as elo
 import glicko as gl
@@ -8,6 +8,7 @@ import math
 from sklearn.preprocessing import LabelEncoder
 import pickle
 import numpy as np
+import player_hits as ph
 
 teams_id = {"Afghanistan":0, "Australia":1,"Bangladesh":2,"England":3,"India":4,
 "Ireland":5, "New Zealand":6,"Pakistan":7,"South Africa":8,"Sri Lanka":9,
@@ -36,7 +37,7 @@ elo_params_h = {'kf_wt_bats': 0.9267052648247908, 'kf_wt_rating': 0.090423259254
 glicko_params = {"mu":1500, "phi": 350, "sigma":0.06, "tau":1.0, "epsilon":0.000001,
     "Q":math.log(10)/400}
 
-visual = True
+visual = False
 bmen = pickle.load(open('../data/batsmen.pkl'))
 bler = pickle.load(open('../data/bowlers.pkl'))
 
@@ -54,13 +55,16 @@ def get_bat_diff(a, tlist, winner_id, loser_id):
     llist = [len(bler)+np.where(bmen==i)[0][0] for i in tlist[loser_id] if i in bmen]    
     return np.sum(np.asarray(sorted(map(a.get, wlist), reverse=True)[:6])-np.asarray(sorted(map(a.get, llist), reverse=True)[:6]))
 
-def get_ratings(params=None):
-    env = elo.HitsElo(**params)
+def get_ratings(eloparams = None, hitsparams = None):
+    env = elo.HitsElo(**eloparams)
     ratings = []
     df_train = pd.read_csv("../data/cricket.csv")
 
-    hlist = pickle.load(open('../data/player_hlist.pkl'))
-    alist = pickle.load(open('../data/player_alist.pkl'))
+    # hlist = pickle.load(open('../data/player_hlist.pkl'))
+    # alist = pickle.load(open('../data/player_alist.pkl'))
+
+    hlist, alist = ph.get_hubs_auth(hitsparams)
+
     tlist = pickle.load(open('../data/player_teams.pkl'))
     df_train.sort(columns="Date", inplace=True)
     ## Additional preprocessing for feats
@@ -172,9 +176,9 @@ def rolling_validate(ratings, starti = 0.50, endi = 1, beta=80):
     print "Log Loss: ", err_log/(end-start)
     return 1.*err/(end-start)
 
-ratings = get_ratings(params=elo_params_h)
-if visual:
-    visualize(ratings)
+# ratings = get_ratings(params=elo_params_h)
+# if visual:
+#     visualize(ratings)
 
 # vis_nmatches()
-1-rolling_validate(ratings, starti = 0.75, endi = 1, beta=elo_params_h["beta"])
+# 1-rolling_validate(ratings, starti = 0.75, endi = 1, beta=elo_params_h["beta"])
