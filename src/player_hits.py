@@ -16,9 +16,9 @@ def load_pickle():
     pickle_loaded = True
     return plist, bats, bowls
 
+plist, bats, bowls = load_pickle()
 def get_hubs_auth(params=None):
-    if pickle_loaded == False:
-        plist, bats, bowls = load_pickle()
+    # if pickle_loaded == False:
     hlist, alist = [], []
     print "Calculating weighing function"
     for pl in range(len(plist)):
