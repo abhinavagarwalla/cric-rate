@@ -83,8 +83,11 @@ def player_graph():
     gi = gi.Weighted_Adjacency(playfin.tolist(), mode = "DIRECTED")
     gi.vs["name"] = pl[h.keys()].tolist()
     #g.delete_vertices(np.where(np.array(g.vs.degree())==0)[0])
-    save_graph(gi, pl[h.keys()].tolist(), h.values())
-
+    color_list = list()
+    for i in range(len(h.values())):
+        color_list.append([(h.values()/max(h.values())),0,0])
+    save_graph(gi, pl[h.keys()].tolist(), color_list)
+    
 def save_graph(g, vl, cl, layoutname = "fruchterman_reingold"):
     if layoutname == "kk":
         g.write_svg("newgraph.svg", labels = "name" , layout = g.layout(layoutname))
